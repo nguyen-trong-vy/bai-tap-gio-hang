@@ -1,0 +1,29 @@
+{# Macro hiển thị badge trạng thái đơn hàng #}
+{% macro status_badge(status) %}
+    {% if status == "Chờ xác nhận" %}
+        <span class="badge rounded-pill px-3 py-2" style="background-color: #fff3e0; color: #e65100; font-weight: 600;">Chờ xác nhận</span>
+    {% elif status == "Đang giao" %}
+        <span class="badge rounded-pill px-3 py-2" style="background-color: #e3f2fd; color: #1565c0; font-weight: 600;">Đang giao</span>
+    {% elif status == "Hoàn tất" %}
+        <span class="badge rounded-pill px-3 py-2" style="background-color: #e8f5e9; color: #2e7d32; font-weight: 600;">Hoàn tất</span>
+    {% elif status == "Đã huỷ" %}
+        <span class="badge rounded-pill px-3 py-2" style="background-color: #eeeeee; color: #616161; font-weight: 600;">Đã huỷ</span>
+    {% else %}
+        <span class="badge bg-secondary rounded-pill px-3 py-2">{{ status }}</span>
+    {% endif %}
+{% endmacro %}
+
+{# Macro hiển thị thanh phân trang giữ nguyên tham số lọc #}
+{% macro render_pagination(page, pages, endpoint, extra_params) %}
+{% if pages > 1 %}
+<nav aria-label="Pagination">
+    <ul class="pagination pagination-sm mb-0">
+        {% for p in range(1, pages + 1) %}
+            <li class="page-item {% if p == page %}active{% endif %}">
+                <a class="page-link" href="{{ url_for(endpoint, page=p, **extra_params) }}">{{ p }}</a>
+            </li>
+        {% endfor %}
+    </ul>
+</nav>
+{% endif %}
+{% endmacro %}

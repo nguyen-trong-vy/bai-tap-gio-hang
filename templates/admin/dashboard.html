@@ -1,0 +1,122 @@
+{% extends "admin/base_admin.html" %}
+{% from "_macros.html" import status_badge %}
+
+{% block title %}Tổng quan{% endblock %}
+
+{% block content %}
+<h3 class="fw-bold mb-4">Tổng quan</h3>
+
+<!-- 4 Thẻ thống kê (mỗi số là 1 truy vấn func.count / func.sum) -->
+<div class="row g-3 mb-4">
+    <div class="col-12 col-sm-6 col-xl-3">
+        <div class="stat-card h-100">
+            <div class="text-secondary small mb-1">Đầu sách</div>
+            <div class="fs-2 fw-bold text-dark">{{ total_books }}</div>
+        </div>
+    </div>
+    <div class="col-12 col-sm-6 col-xl-3">
+        <div class="stat-card h-100">
+            <div class="text-secondary small mb-1">Đơn chờ xác nhận</div>
+            <div class="fs-2 fw-bold" style="color: #ea580c;">{{ pending_orders }}</div>
+        </div>
+    </div>
+    <div class="col-12 col-sm-6 col-xl-3">
+        <div class="stat-card h-100">
+            <div class="text-secondary small mb-1">Doanh thu tháng {{ current_month }}</div>
+            <div class="fs-3 fw-bold text-success">{{ monthly_revenue | vnd }}</div>
+        </div>
+    </div>
+    <div class="col-12 col-sm-6 col-xl-3">
+        <div class="stat-card h-100">
+            <div class="text-secondary small mb-1">Sắp hết hàng</div>
+            <div class="fs-2 fw-bold text-danger">{{ low_stock_count }}</div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- 5 Đơn hàng mới nhất -->
+    <div class="col-12 col-lg-8">
+        <h5 class="fw-bold mb-3">Đơn hàng mới nhất</h5>
+        <div class="table-responsive mb-2">
+            <table class="table align-middle">
+                <thead class="table-light text-secondary small">
+                    <tr>
+                        <th>Mã</th>
+                        <th>Khách hàng</th>
+                        <th class="text-end">Tổng tiền</th>
+                        <th class="text-center">Trạng thái</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for o in recent_orders %}
+                    <tr>
+                        <td>
+                            <a href="{{ url_for('admin_order_detail', order_id=o.id) }}" class="fw-bold text-dark text-decoration-none">
+                                #{{ o.id }}
+                            </a>
+                        </td>
+                        <td>
+                            <a href="{{ url_for('admin_order_detail', order_id=o.id) }}" class="text-dark text-decoration-none">
+                                {{ o.customer_name }}
+                            </a>
+                        </td>
+                        <td class="text-end">{{ o.total_amount | vnd }}</td>
+                        <td class="text-center">{{ status_badge(o.status) }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <a href="{{ url_for('admin_orders') }}" class="text-decoration-none fw-semibold">
+            Xem tất cả đơn hàng &rarr;
+        </a>
+    </div>
+
+    <!-- Cột phải: Sắp hết hàng & Biểu đồ doanh thu 7 ngày -->
+    <div class="col-12 col-lg-4">
+        <div class="stat-card mb-4">
+            <h6 class="fw-bold mb-3">Sắp hết hàng (&le; 5)</h6>
+            {% if low_stock_books %}
+                <ul class="list-unstyled mb-3">
+                    {% for b in low_stock_books %}
+                    <li class="d-flex justify-content-between align-items-center py-1">
+                        <a href="{{ url_for('admin_book_form', book_id=b.id) }}" class="text-dark text-decoration-none">
+                            {{ b.title }}
+                        </a>
+                        <span class="fw-bold {% if b.stock == 0 %}text-danger{% else %}text-warning{% endif %}">
+                            {{ b.stock }}
+                        </span>
+                    </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p class="small text-muted mb-2">Tất cả đầu sách đều còn đủ hàng.</p>
+            {% endif %}
+            <a href="{{ url_for('admin_books', stock='low') }}" class="small text-decoration-none fw-semibold">
+                Nhập thêm sách &rarr;
+            </a>
+        </div>
+
+        <!-- Biểu đồ doanh thu 7 ngày -->
+        <div>
+            <h6 class="fw-bold mb-3">Doanh thu 7 ngày</h6>
+            <div class="d-flex align-items-end justify-content-between gap-2 pt-3 px-2 border-bottom" style="height: 140px;">
+                {% for d in chart_days %}
+                <div class="d-flex flex-column align-items-center flex-fill h-100 justify-content-end"
+                     title="{{ d.label }}: {{ d.revenue | vnd }}">
+                    <div class="w-100 rounded-top"
+                         style="height: {{ d.height_pct }}%; background-color: {{ '#2563eb' if d.is_today else '#93c5fd' }};">
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            <div class="d-flex justify-content-between small text-muted pt-1 px-1" style="font-size: 0.72rem;">
+                {% for d in chart_days %}
+                    <span>{{ d.label }}</span>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

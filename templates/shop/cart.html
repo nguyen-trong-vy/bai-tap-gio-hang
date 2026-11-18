@@ -1,0 +1,111 @@
+{% extends "shop/base_shop.html" %}
+
+{% block title %}Giỏ hàng - Nhà sách Sông Hương{% endblock %}
+
+{% block content %}
+<h3 class="fw-bold mb-4">Giỏ hàng ({{ items | length }} đầu sách)</h3>
+
+{% if items %}
+<div class="card border-0 shadow-sm mb-4">
+    <div class="table-responsive">
+        <table class="table align-middle mb-0">
+            <thead class="table-light text-secondary">
+                <tr>
+                    <th class="ps-4">Sách</th>
+                    <th class="text-center">Đơn giá</th>
+                    <th class="text-center" style="width: 180px;">Số lượng</th>
+                    <th class="text-end">Thành tiền</th>
+                    <th class="text-end pe-4"></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in items %}
+                <tr>
+                    <td class="ps-4 py-3">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="book-cover-box flex-shrink-0" style="width: 48px; height: 64px;">
+                                {% if item.book.cover_image %}
+                                    <img src="{{ url_for('static', filename='uploads/' ~ item.book.cover_image) }}" alt="{{ item.book.title }}">
+                                {% endif %}
+                            </div>
+                            <div>
+                                <a href="{{ url_for('shop_book_detail', book_id=item.book.id) }}" class="fw-semibold text-dark text-decoration-none">
+                                    {{ item.book.title }}
+                                </a>
+                                <div class="small text-muted">Tồn kho: {{ item.book.stock }}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="text-center">{{ item.unit_price | vnd }}</td>
+                    <td class="text-center">
+                        <div class="d-inline-flex align-items-center gap-1">
+                            <!-- Nút giảm 1 -->
+                            <form method="POST" action="{{ url_for('cart_update', book_id=item.book.id) }}" class="d-inline">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <input type="hidden" name="action" value="dec">
+                                <button type="submit" class="btn btn-sm btn-outline-primary fw-bold px-2">–</button>
+                            </form>
+
+                            <span class="px-3 py-1 border rounded bg-light fw-semibold">{{ item.quantity }}</span>
+
+                            <!-- Nút tăng 1 (khoá khi bằng tồn kho) -->
+                            <form method="POST" action="{{ url_for('cart_update', book_id=item.book.id) }}" class="d-inline">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <input type="hidden" name="action" value="inc">
+                                <button type="submit" class="btn btn-sm btn-outline-primary fw-bold px-2"
+                                        {% if item.quantity >= item.book.stock %}disabled{% endif %}>+</button>
+                            </form>
+                        </div>
+                    </td>
+                    <td class="text-end fw-bold">{{ item.line_total | vnd }}</td>
+                    <td class="text-end pe-4">
+                        <form method="POST" action="{{ url_for('cart_remove', book_id=item.book.id) }}" class="d-inline">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="btn btn-sm text-danger border-0 bg-transparent fw-semibold">
+                                ✕ Xoá
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+            <tfoot>
+                <tr>
+                    <td colspan="3" class="text-end fw-semibold fs-5 py-3">Tổng cộng</td>
+                    <td class="text-end price-text fs-4 py-3">{{ subtotal | vnd }}</td>
+                    <td></td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+</div>
+
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+    <div class="d-flex gap-3">
+        <a href="{{ url_for('shop_books') }}" class="btn btn-outline-primary px-4 py-2 fw-semibold">
+            &larr; Tiếp tục mua sách
+        </a>
+        <form method="POST" action="{{ url_for('cart_clear') }}" onsubmit="return confirm('Bạn có chắc muốn xoá toàn bộ giỏ hàng?');">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="btn btn-outline-danger px-4 py-2 fw-semibold">
+                Xoá giỏ hàng
+            </button>
+        </form>
+    </div>
+
+    <a href="{{ url_for('checkout') }}" class="btn btn-primary px-5 py-2 fs-5 fw-semibold">
+        Đặt hàng &rarr;
+    </a>
+</div>
+{% else %}
+<div class="card border-0 shadow-sm p-5 text-center">
+    <h5 class="text-secondary mb-3">Giỏ hàng trống</h5>
+    <p class="text-muted mb-4">Bạn chưa có cuốn sách nào trong giỏ hàng.</p>
+    <div>
+        <a href="{{ url_for('shop_books') }}" class="btn btn-primary px-4 py-2 fw-semibold">
+            &larr; Quay lại danh sách sách
+        </a>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

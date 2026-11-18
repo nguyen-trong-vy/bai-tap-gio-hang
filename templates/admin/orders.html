@@ -1,0 +1,81 @@
+{% extends "admin/base_admin.html" %}
+{% from "_macros.html" import status_badge, render_pagination %}
+
+{% block title %}Đơn hàng{% endblock %}
+
+{% block content %}
+<h3 class="fw-bold mb-3">Đơn hàng</h3>
+
+<!-- Tab theo trạng thái kèm số lượng (group_by) -->
+<div class="d-flex flex-wrap gap-2 mb-3">
+    <a href="{{ url_for('admin_orders', q=q if q else None) }}"
+       class="btn btn-sm px-3 py-2 rounded-3 fw-semibold {% if not status_filter %}bg-warning-subtle text-warning-emphasis{% else %}text-secondary{% endif %}">
+        Tất cả ({{ total_all_orders }})
+    </a>
+    {% for st in ["Chờ xác nhận", "Đang giao", "Hoàn tất", "Đã huỷ"] %}
+    <a href="{{ url_for('admin_orders', status=st, q=q if q else None) }}"
+       class="btn btn-sm px-3 py-2 rounded-3 fw-semibold {% if status_filter == st %}bg-warning-subtle text-warning-emphasis{% else %}text-secondary{% endif %}">
+        {{ st }} ({{ status_counts[st] }})
+    </a>
+    {% endfor %}
+</div>
+
+<!-- Tìm kiếm mã đơn, tên khách hàng, số điện thoại -->
+<form method="GET" action="{{ url_for('admin_orders') }}" class="row g-2 mb-4">
+    {% if status_filter %}
+        <input type="hidden" name="status" value="{{ status_filter }}">
+    {% endif %}
+    <div class="col-12 col-md-8">
+        <input type="text" name="q" value="{{ q }}" class="form-control" placeholder="Mã đơn, tên khách hàng, số điện thoại...">
+    </div>
+    <div class="col-12 col-md-2">
+        <button type="submit" class="btn btn-primary w-100 fw-semibold">Tìm</button>
+    </div>
+</form>
+
+<div class="table-responsive">
+    <table class="table table-hover align-middle">
+        <thead class="table-light text-secondary small">
+            <tr>
+                <th>Mã</th>
+                <th>Ngày đặt</th>
+                <th>Khách hàng</th>
+                <th>Điện thoại</th>
+                <th class="text-end">Tổng tiền</th>
+                <th class="text-center">Trạng thái</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for o in orders %}
+            <tr style="cursor: pointer;" onclick="window.location='{{ url_for('admin_order_detail', order_id=o.id) }}'">
+                <td class="py-3 fw-bold">#{{ o.id }}</td>
+                <td>{{ o.created_at.strftime("%d/%m/%Y") }}</td>
+                <td>{{ o.customer_name }}</td>
+                <td>{{ o.customer_phone }}</td>
+                <td class="text-end">{{ o.total_amount | vnd }}</td>
+                <td class="text-center">{{ status_badge(o.status) }}</td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="6" class="text-center text-muted py-4">Không tìm thấy đơn hàng nào phù hợp.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Dòng cuối: số đơn và tổng giá trị của bộ lọc hiện tại -->
+<div class="d-flex justify-content-between align-items-center pt-2 border-top">
+    <div class="fw-semibold text-secondary">
+        {{ filtered_count }} đơn · tổng giá trị
+    </div>
+    <div class="fs-5 fw-bold" style="color: #ea580c;">
+        {{ filtered_total_value | vnd }}
+    </div>
+</div>
+
+<div class="d-flex justify-content-between align-items-center mt-3">
+    <div class="small text-muted">Bấm vào một dòng để xem chi tiết đơn hàng</div>
+    {{ render_pagination(page, pages, 'admin_orders', {'status': status_filter, 'q': q}) }}
+</div>
+{% endblock %}

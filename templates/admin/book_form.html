@@ -1,0 +1,108 @@
+{% extends "admin/base_admin.html" %}
+
+{% block title %}{{ "Sửa sách: " ~ book.title if is_edit else "Thêm sách mới" }}{% endblock %}
+
+{% block content %}
+<div class="small text-muted mb-1">
+    <a href="{{ url_for('admin_books') }}" class="text-muted text-decoration-none">Sách</a> &rsaquo;
+    {{ "Sửa" if is_edit else "Thêm mới" }}
+</div>
+<h3 class="fw-bold mb-4">
+    {{ "Sửa sách: " ~ book.title if is_edit else "Thêm sách mới" }}
+</h3>
+
+<form method="POST" enctype="multipart/form-data" novalidate>
+    {{ form.hidden_tag() }}
+
+    <div class="row g-4">
+        <div class="col-12 col-lg-8">
+            <div class="mb-3">
+                <label class="form-label fw-semibold text-secondary">Tên sách *</label>
+                {{ form.title(class="form-control " ~ ("is-invalid" if form.title.errors else "")) }}
+                {% for err in form.title.errors %}
+                    <div class="invalid-feedback">{{ err }}</div>
+                {% endfor %}
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label fw-semibold text-secondary">Tác giả *</label>
+                {{ form.author(class="form-control " ~ ("is-invalid" if form.author.errors else "")) }}
+                {% for err in form.author.errors %}
+                    <div class="invalid-feedback">{{ err }}</div>
+                {% endfor %}
+            </div>
+
+            <div class="row">
+                <div class="col-12 col-md-6 mb-3">
+                    <label class="form-label fw-semibold text-secondary">Danh mục *</label>
+                    {{ form.category_id(class="form-select " ~ ("is-invalid" if form.category_id.errors else "")) }}
+                    {% for err in form.category_id.errors %}
+                        <div class="invalid-feedback">{{ err }}</div>
+                    {% endfor %}
+                </div>
+                <div class="col-12 col-md-6 mb-3">
+                    <label class="form-label fw-semibold text-secondary">Năm xuất bản</label>
+                    {{ form.publish_year(class="form-control " ~ ("is-invalid" if form.publish_year.errors else ""), placeholder="2024") }}
+                    {% for err in form.publish_year.errors %}
+                        <div class="invalid-feedback">{{ err }}</div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-12 col-md-6 mb-3">
+                    <label class="form-label fw-semibold text-secondary">Giá (đồng) *</label>
+                    {{ form.price(class="form-control " ~ ("is-invalid" if form.price.errors else ""), placeholder="95000") }}
+                    {% for err in form.price.errors %}
+                        <div class="invalid-feedback">{{ err }}</div>
+                    {% endfor %}
+                </div>
+                <div class="col-12 col-md-6 mb-3">
+                    <label class="form-label fw-semibold text-secondary">Tồn kho *</label>
+                    <input type="number" name="stock"
+                           value="{{ request.form.get('stock', book.stock if book else 0) }}"
+                           class="form-control {% if form.stock.errors %}is-invalid{% endif %}">
+                    {% for err in form.stock.errors %}
+                        <div class="invalid-feedback">{{ err }}</div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="mb-4">
+                <label class="form-label fw-semibold text-secondary">Mô tả</label>
+                {{ form.description(class="form-control", rows="3") }}
+            </div>
+
+            <div class="d-flex gap-3">
+                <button type="submit" class="btn btn-primary px-5 py-2 fw-semibold">Lưu</button>
+                <a href="{{ url_for('admin_books') }}" class="btn btn-outline-primary px-4 py-2 fw-semibold">Huỷ</a>
+            </div>
+        </div>
+
+        <!-- Cột phải: Ảnh bìa -->
+        <div class="col-12 col-lg-4">
+            <label class="form-label fw-semibold text-secondary">Ảnh bìa</label>
+            <div class="rounded d-flex align-items-center justify-content-center mb-3 overflow-hidden"
+                 style="height: 240px; background-color: #e2e8f0; color: #64748b;">
+                {% if is_edit and book.cover_image %}
+                    <img src="{{ url_for('static', filename='uploads/' ~ book.cover_image) }}"
+                         alt="{{ book.title }}" style="width: 100%; height: 100%; object-fit: cover;">
+                {% else %}
+                    <span>Ảnh hiện tại</span>
+                {% endif %}
+            </div>
+
+            <div class="mb-2">
+                {{ form.cover_file(class="form-control " ~ ("is-invalid" if form.cover_file.errors else "")) }}
+                {% for err in form.cover_file.errors %}
+                    <div class="invalid-feedback d-block">{{ err }}</div>
+                {% endfor %}
+            </div>
+            <div class="small text-muted">
+                JPG, PNG, WEBP · tối đa 2 MB<br>
+                Không chọn: giữ ảnh cũ
+            </div>
+        </div>
+    </div>
+</form>
+{% endblock %}
